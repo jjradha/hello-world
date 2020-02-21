@@ -2,25 +2,28 @@ use ReportServer
 go
 
 with VarBinMax as ( 
-	select 
-		 ItemID
-		,VarBinMax = try_convert(varbinary(max),[Content])
-		,HasBom = convert(bit,iif(left(try_convert(varbinary(max),[Content]),3)=0xEFBBBF,1,0))
-		,LenVarBinMax = len(try_convert(varbinary(max),[Content]))
-		--,[Type]
-	from [Catalog]
-	where [Type] = 2
+    select 
+         ItemID
+        ,VarBinMax    = CONVERT(VARBINARY(MAX),[Content],1)
+        ,HasBom       = CONVERT(BIT,IIF(
+                        LEFT(CONVERT(VARBINARY(MAX),[Content],1),3)=0xEFBBBF,1,0))
+        ,LenVarBinMax = LEN(CONVERT(VARBINARY(MAX),[Content],1))
+        ,[Type]
+    from [Catalog]
+    where [Type] = 2
 ) -- select top(10) * from VarBinMax
 , ContentNoBom as (
-	select 
-		 ItemID
-		,ContentNoBom = convert(varbinary(max),iif(HasBom=1,substring(VarBinMax,4,LenVarBinMax),VarBinMax))
-	from VarBinMax
-)  --select top(10) * from ContentNoBom
+    select 
+         ItemID
+        ,ContentNoBom = CONVERT(VARBINARY(max),
+                        IIF(HasBom=1,SUBSTRING(VarBinMax,4,LenVarBinMax),VarBinMax))
+    from VarBinMax
+)  
+--select top(10) * from ContentNoBom
 select 
-	 ItemID
-	,RdlXml = convert(xml,ContentNoBom)
-	,RdlText = convert(nvarchar(max),convert(xml,ContentNoBom))
+     ItemID
+    ,RdlXml  = CONVERT(XML,ContentNoBom)
+    ,RdlText = CONVERT(NVARCHAR(MAX),CONVERT(XML,ContentNoBom))
 into #RDL
 from ContentNoBom cnb
 
